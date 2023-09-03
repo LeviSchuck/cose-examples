@@ -4,12 +4,14 @@ from pycose.keys.curves import P256, P384, P521, Ed25519, Ed448, X25519, X448
 import cbor2
 from binascii import hexlify
 from secrets import token_bytes
+
+import base64
 import os
 
 def out(name, bytes):
     if not os.path.exists("./keys"):
         os.makedirs("./keys")
-    
+
     path = f"./keys/{name}"
 
     if not os.path.exists(path):
@@ -34,19 +36,25 @@ for [name, alg] in algs:
 
     out(f"{name}_private_key.bin", cose_rsa_key.encode())
     out(f"{name}_private_key.hex", hexlify(cose_rsa_key.encode()))
+    out(f"{name}_private_key.b64", base64.b64encode(cose_rsa_key.encode()))
+    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(cose_rsa_key.encode()))
 
     cose_rsa_key2 : RSAKey = CoseKey.decode(cose_rsa_key.encode())
     # Force into a public key
     cose_rsa_key2.key_ops = [keyops.VerifyOp]
     cose_rsa_key3 = cbor2.loads(cose_rsa_key2.encode())
-    del cose_rsa_key3[-3]
-    del cose_rsa_key3[-4]
-    del cose_rsa_key3[-6]
-    del cose_rsa_key3[-7]
-    del cose_rsa_key3[-8]
+    del cose_rsa_key3[-3] # private exponent d
+    del cose_rsa_key3[-4] # prime factor q of n
+    del cose_rsa_key3[-5] # prime factor p of n
+    del cose_rsa_key3[-6] # d mod (p - 1)
+    del cose_rsa_key3[-7] # d mod (q - 1)
+    del cose_rsa_key3[-8] # CRT coefficient q^(-1) mod p
 
     out(f"{name}_public_key.bin", cbor2.dumps(cose_rsa_key3))
     out(f"{name}_public_key.hex", hexlify(cbor2.dumps(cose_rsa_key3)))
+    out(f"{name}_public_key.b64", base64.b64encode(cbor2.dumps(cose_rsa_key3)))
+    out(f"{name}_public_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(cose_rsa_key3)))
+
 
 curves = [
     ["ES256", P256],
@@ -62,15 +70,19 @@ for [name, crv] in curves:
 
     out(f"{name}_private_key.bin", ecdsa_key.encode())
     out(f"{name}_private_key.hex", hexlify(ecdsa_key.encode()))
+    out(f"{name}_private_key.b64", base64.b64encode(ecdsa_key.encode()))
+    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(ecdsa_key.encode()))
 
     ecdsa_key2 : EC2Key = CoseKey.decode(ecdsa_key.encode())
     # Force into a public key
     ecdsa_key2.key_ops = [keyops.VerifyOp]
     ecdsa_key3 = cbor2.loads(ecdsa_key2.encode())
-    del ecdsa_key3[-4]
+    del ecdsa_key3[-4] # d - the private key
 
     out(f"{name}_public_key.bin", cbor2.dumps(ecdsa_key3))
     out(f"{name}_public_key.hex", hexlify(cbor2.dumps(ecdsa_key3)))
+    out(f"{name}_private_key.b64", base64.b64encode(cbor2.dumps(ecdsa_key3)))
+    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(ecdsa_key3)))
 
 hashes = [
     ["HS256", HMAC256],
@@ -94,6 +106,8 @@ for [name, alg] in hashes:
 
     out(f"{name}_symmetric_key.bin", cbor2.dumps(key))
     out(f"{name}_symmetric_key.hex", hexlify(cbor2.dumps(key)))
+    out(f"{name}_symmetric_key.b64", base64.b64encode(cbor2.dumps(key)))
+    out(f"{name}_symmetric_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(key)))
 
 edwards = [
     ["ED25519", Ed25519],
@@ -107,12 +121,16 @@ for [name, crv] in edwards:
     edwards_key.key_ops = [keyops.SignOp]
     out(f"{name}_private_key.bin", edwards_key.encode())
     out(f"{name}_private_key.hex", hexlify(edwards_key.encode()))
+    out(f"{name}_private_key.b64", base64.b64encode(edwards_key.encode()))
+    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(edwards_key.encode()))
 
     edwards_key2 : EC2Key = CoseKey.decode(edwards_key.encode())
     # Force into a public key
     edwards_key2.key_ops = [keyops.VerifyOp]
     edwards_key3 = cbor2.loads(edwards_key2.encode())
-    del edwards_key3[-4]
+    del edwards_key3[-4] # d - the private key
 
     out(f"{name}_public_key.bin", cbor2.dumps(edwards_key3))
     out(f"{name}_public_key.hex", hexlify(cbor2.dumps(edwards_key3)))
+    out(f"{name}_private_key.b64", base64.b64encode(cbor2.dumps(edwards_key3)))
+    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(edwards_key3)))
