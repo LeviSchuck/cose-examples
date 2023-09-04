@@ -81,8 +81,8 @@ for [name, crv] in curves:
 
     out(f"{name}_public_key.bin", cbor2.dumps(ecdsa_key3))
     out(f"{name}_public_key.hex", hexlify(cbor2.dumps(ecdsa_key3)))
-    out(f"{name}_private_key.b64", base64.b64encode(cbor2.dumps(ecdsa_key3)))
-    out(f"{name}_private_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(ecdsa_key3)))
+    out(f"{name}_public_key.b64", base64.b64encode(cbor2.dumps(ecdsa_key3)))
+    out(f"{name}_public_key.b64u", base64.urlsafe_b64encode(cbor2.dumps(ecdsa_key3)))
 
 hashes = [
     ["HS256", HMAC256],
